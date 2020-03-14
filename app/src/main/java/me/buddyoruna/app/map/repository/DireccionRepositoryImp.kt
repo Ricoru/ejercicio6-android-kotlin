@@ -1,8 +1,9 @@
 package me.buddyoruna.app.map.repository
 
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreSettings
+import com.google.firebase.firestore.*
+import com.google.gson.Gson
 import me.buddyoruna.app.map.domain.Direccion
 
 class DireccionRepositoryImp : IDireccionRepository {
@@ -22,24 +23,25 @@ class DireccionRepositoryImp : IDireccionRepository {
     }
 
     override fun getDirecciones(): MutableLiveData<List<Direccion>> {
-        val direcciones = ArrayList<Direccion>()
         remoteDB.collection(ADDRESS_COLLECTION)
-            .get()
-            .addOnSuccessListener {
-                for (e in it.documents) {
+            .addSnapshotListener { it, err ->
+                if (err != null) {
+                    return@addSnapshotListener
+                }
+
+                val direcciones = ArrayList<Direccion>()
+                for (e in it!!.documents) {
                     val result = e.toObject(Direccion::class.java)
                     result?.key = e.id
                     direcciones.add(result!!)
                 }
+
                 dataMutableList.value = direcciones
-            }
-            .addOnFailureListener {
-                it.printStackTrace()
             }
         return dataMutableList
     }
 
-    override fun addDireccion(direccion: Direccion) : MutableLiveData<String> {
+    override fun addDireccion(direccion: Direccion): MutableLiveData<String> {
         remoteDB.collection(ADDRESS_COLLECTION)
             .add(direccion)
             .addOnSuccessListener {
@@ -52,7 +54,7 @@ class DireccionRepositoryImp : IDireccionRepository {
         return messageMutable
     }
 
-    override fun updDireccion(direccion: Direccion) : MutableLiveData<String> {
+    override fun updDireccion(direccion: Direccion): MutableLiveData<String> {
         val data = HashMap<String, Any>()
         data["nombre"] = direccion.nombre
         data["position"] = direccion.position!!
@@ -60,7 +62,7 @@ class DireccionRepositoryImp : IDireccionRepository {
         data["apodo"] = direccion.apodo
 
         remoteDB.collection(ADDRESS_COLLECTION)
-            .document(direccion.key)
+            .document(direccion.key!!)
             .update(data)
             .addOnSuccessListener {
                 messageMutable.value = "Actualización exitosa"
@@ -72,7 +74,7 @@ class DireccionRepositoryImp : IDireccionRepository {
         return messageMutable
     }
 
-    override fun deleteDireccion(key: String) : MutableLiveData<String> {
+    override fun deleteDireccion(key: String): MutableLiveData<String> {
         remoteDB.collection(ADDRESS_COLLECTION)
             .document(key)
             .delete()

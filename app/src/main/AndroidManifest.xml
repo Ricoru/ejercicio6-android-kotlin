@@ -29,14 +29,6 @@
             android:value="@string/google_maps_key" />
 
         <activity
-            android:name="me.buddyoruna.app.map.MapsUbicationActivity"
-            android:label="@string/title_activity_maps_ubication" />
-
-        <activity
-            android:name="me.buddyoruna.app.map.MapsTypesActivity"
-            android:label="@string/title_activity_maps_types" />
-
-        <activity
             android:name="me.buddyoruna.app.map.RegisterAddressActivity"
             android:label="@string/title_activity_maps">
         </activity>

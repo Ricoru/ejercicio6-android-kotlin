@@ -8,6 +8,6 @@ class Direccion  {
     var position: GeoPoint? = null
     var referencia: String = ""
     var apodo: String = ""
-    var key : String = ""
+    var key : String ? = null
 
 }

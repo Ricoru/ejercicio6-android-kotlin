@@ -2,6 +2,7 @@ package me.buddyoruna.app.map
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -15,6 +16,13 @@ import me.buddyoruna.app.map.domain.Direccion
 import me.buddyoruna.app.map.viewmodel.DireccionViewModel
 
 class MainActivity : AppCompatActivity(), OnClick<Direccion> {
+
+    companion object {
+        enum class Actiones {
+            Editar,
+            Eliminar
+        }
+    }
 
     private var direccionViewModel: DireccionViewModel? = null
 
@@ -47,14 +55,22 @@ class MainActivity : AppCompatActivity(), OnClick<Direccion> {
             })
     }
 
-    override fun onClickItem(obj: Direccion, position: Int) {
-
-        val intent = Intent(this, RegisterAddressActivity::class.java)
-        val extra = Bundle()
-        extra.putString(RegisterAddressActivity.INTENT_ACTION_REGISTER, "edit")
-        extra.putString(RegisterAddressActivity.INTENT_ACTION_DATA, Gson().toJson(obj))
-        intent.putExtras(extra)
-        startActivity(intent)
+    override fun onClickItem(obj: Direccion, position: Int, action: Actiones) {
+        when (action) {
+            Actiones.Eliminar -> {
+                direccionViewModel?.deleteDireccion(obj.key!!)?.observe(this, Observer { msg ->
+                    Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+                })
+            }
+            else -> {
+                val intent = Intent(this, RegisterAddressActivity::class.java)
+                val extra = Bundle()
+                extra.putString(RegisterAddressActivity.INTENT_ACTION_REGISTER, "edit")
+                extra.putString(RegisterAddressActivity.INTENT_ACTION_DATA, Gson().toJson(obj))
+                intent.putExtras(extra)
+                startActivity(intent)
+            }
+        }
     }
 
 }

@@ -17,6 +17,8 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.gson.Gson
+import me.buddyoruna.app.map.domain.Direccion
 import me.buddyoruna.app.map.viewmodel.DireccionViewModel
 import me.buddyoruna.map.R
 
@@ -32,6 +34,8 @@ class RegisterAddressActivity : AppCompatActivity(), OnMapReadyCallback,
     private lateinit var mMap: GoogleMap
     private lateinit var mGeocoder: Geocoder
     private lateinit var markerDrag: Marker
+    private lateinit var mPosition: LatLng
+    var direccion: Direccion? = null
 
     private var direccionViewModel: DireccionViewModel? = null
 
@@ -44,6 +48,15 @@ class RegisterAddressActivity : AppCompatActivity(), OnMapReadyCallback,
         mapFragment.getMapAsync(this)
 
         direccionViewModel = ViewModelProviders.of(this).get(DireccionViewModel::class.java)
+
+        if (intent.extras != null) {
+            if (!intent.getStringExtra(INTENT_ACTION_DATA).isNullOrEmpty()) {
+                direccion = Gson().fromJson(
+                    intent.getStringExtra(INTENT_ACTION_DATA),
+                    Direccion::class.java
+                )
+            }
+        }
     }
 
 
@@ -71,16 +84,16 @@ class RegisterAddressActivity : AppCompatActivity(), OnMapReadyCallback,
         validatePermisionGps()
         // Add a marker in Academia Moviles and move the camera
         //marker por default
-        val am = LatLng(
+        mPosition = LatLng(
             Places.miPosicion.latitude,
             Places.miPosicion.longitude
         )
         markerDrag = mMap.addMarker(
-            MarkerOptions().position(am).title("Mi Posición").snippet("Yo estoy aquí")
+            MarkerOptions().position(mPosition).title("Mi Posición").snippet("Yo estoy aquí")
                 .draggable(true)
         )
 
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(am, 10f))
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mPosition, 10f))
         //googleMap.setOnMarkerClickListener(this)
         googleMap.setOnMarkerDragListener(this)
         //googleMap.setOnInfoWindowClickListener(this)
@@ -88,6 +101,7 @@ class RegisterAddressActivity : AppCompatActivity(), OnMapReadyCallback,
 
     override fun onMarkerDragEnd(p0: Marker?) {
         if (p0?.equals(markerDrag)!!) {
+            mPosition = p0?.position
             getAddress(p0.position.latitude, p0.position.longitude)
         }
     }
@@ -127,8 +141,27 @@ class RegisterAddressActivity : AppCompatActivity(), OnMapReadyCallback,
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_add -> {
-
-
+                if (direccion != null) {
+                    FormDireccionDialogFragment.newInstance(
+                            direccion!!.key!!,
+                            direccion!!.nombre,
+                            mPosition.latitude,
+                            mPosition.longitude,
+                            direccion!!.referencia,
+                            direccion!!.apodo
+                        )
+                        .show(supportFragmentManager, "Formulario")
+                } else {
+                    FormDireccionDialogFragment.newInstance(
+                            "",
+                            "",
+                            mPosition.latitude,
+                            mPosition.longitude,
+                            "",
+                            ""
+                        )
+                        .show(supportFragmentManager, "Formulario")
+                }
             }
         }
         return super.onOptionsItemSelected(item)
@@ -154,15 +187,5 @@ class RegisterAddressActivity : AppCompatActivity(), OnMapReadyCallback,
             }
         }
     }
-
-    /*val direccion = Direccion()
-                direccion.nombre =
-
-                direccionViewModel?.addDireccion(direccion)
-                    ?.observe(this, Observer { message : String ->
-                        finish()
-                    })
-
-                    */
 
 }
